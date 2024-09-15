@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake játék - WASD irányítás</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: url('https://via.placeholder.com/1600x900') no-repeat center center fixed;
+            background-size: cover;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            color: #fff;
+            margin-top: 20px;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+        }
+
+        canvas {
+            background-color: rgba(0, 0, 0, 0.5); /* Átlátszó fekete háttér */
+            display: block;
+            margin: 20px auto;
+            border: 5px solid #333;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        button:active {
+            background-color: #1e7e34;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Snake játék - WASD irányítás</h1>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <button id="restartButton">Újraindítás</button>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const restartButton = document.getElementById("restartButton");
+
+        const box = 20;
+        let snake;
+        let direction;
+        let food;
+        let game;
+
+        // Játék újraindítása
+        function initGame() {
+            snake = [{ x: 10 * box, y: 10 * box }];
+            direction = "RIGHT";
+            food = {
+                x: Math.floor(Math.random() * (canvas.width / box)) * box,
+                y: Math.floor(Math.random() * (canvas.height / box)) * box
+            };
+
+            clearInterval(game);
+            game = setInterval(draw, 100);
+        }
+
+        // Irányváltás
+        document.addEventListener("keydown", changeDirection);
+
+        function changeDirection(event) {
+            if (event.key === "w" && direction !== "DOWN") {
+                direction = "UP";
+            } else if (event.key === "s" && direction !== "UP") {
+                direction = "DOWN";
+            } else if (event.key === "a" && direction !== "RIGHT") {
+                direction = "LEFT";
+            } else if (event.key === "d" && direction !== "LEFT") {
+                direction = "RIGHT";
+            }
+        }
+
+        // Rajzolás
+        function draw() {
+            // Háttér törlése
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Kígyó rajzolása
+            for (let i = 0; i < snake.length; i++) {
+                ctx.fillStyle = i === 0 ? "green" : "lime";
+                ctx.fillRect(snake[i].x, snake[i].y, box, box);
+            }
+
+            // Étel rajzolása
+            ctx.fillStyle = "red";
+            ctx.fillRect(food.x, food.y, box, box);
+
+            // Régi fej pozíció
+            let snakeX = snake[0].x;
+            let snakeY = snake[0].y;
+
+            // Irány alapján mozgatás
+            if (direction === "UP") snakeY -= box;
+            if (direction === "DOWN") snakeY += box;
+            if (direction === "LEFT") snakeX -= box;
+            if (direction === "RIGHT") snakeX += box;
+
+            // Kígyó megeszi az ételt
+            if (snakeX === food.x && snakeY === food.y) {
+                food = {
+                    x: Math.floor(Math.random() * (canvas.width / box)) * box,
+                    y: Math.floor(Math.random() * (canvas.height / box)) * box
+                };
+            } else {
+                snake.pop(); // Ha nem eszik, a farok egy része eltűnik
+            }
+
+            // Új fej hozzáadása
+            let newHead = { x: snakeX, y: snakeY };
+
+            // Játék vége, ha a kígyó falba vagy magába ütközik
+            if (
+                snakeX < 0 || snakeX >= canvas.width ||
+                snakeY < 0 || snakeY >= canvas.height ||
+                collision(newHead, snake)
+            ) {
+                clearInterval(game);
+                alert("Játék vége! Kattints az újraindítás gombra a folytatáshoz.");
+            }
+
+            snake.unshift(newHead);
+        }
+
+        // Ütközés ellenőrzés
+        function collision(head, body) {
+            for (let i = 0; i < body.length; i++) {
+                if (head.x === body[i].x && head.y === body[i].y) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Újraindítás gomb funkció
+        restartButton.addEventListener("click", initGame);
+
+        // Játék indítása
+        initGame();
+    </script>
+</body>
+</html>
